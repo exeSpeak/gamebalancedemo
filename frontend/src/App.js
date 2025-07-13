@@ -148,6 +148,74 @@ function App() {
     }
   };
 
+  const editStatModifiers = (stat) => {
+    setEditingStat({
+      name: stat.name,
+      base_value: stat.base_value,
+      per_level_bonus: stat.per_level_bonus,
+      modifiers: stat.modifiers.map(mod => ({
+        attribute: mod.attribute,
+        multiplier: mod.multiplier,
+        base_bonus: mod.base_bonus
+      }))
+    });
+    setShowStatEditor(true);
+  };
+
+  const updateStatDefinition = async () => {
+    if (!currentProject || !editingStat) return;
+
+    try {
+      await axios.put(
+        `${API}/projects/${currentProject.id}/stats/${editingStat.name}`,
+        editingStat
+      );
+      
+      // Refresh project data to get updated character stats
+      await selectProject(currentProject.id);
+      setShowStatEditor(false);
+      setEditingStat(null);
+    } catch (error) {
+      console.error("Error updating stat definition:", error);
+    }
+  };
+
+  const updateModifier = (modifierIndex, field, value) => {
+    const updatedModifiers = [...editingStat.modifiers];
+    updatedModifiers[modifierIndex] = {
+      ...updatedModifiers[modifierIndex],
+      [field]: field === 'attribute' ? value : parseFloat(value) || 0
+    };
+    setEditingStat({
+      ...editingStat,
+      modifiers: updatedModifiers
+    });
+  };
+
+  const addModifier = () => {
+    const availableAttributes = currentProject.attributes.filter(
+      attr => !editingStat.modifiers.some(mod => mod.attribute === attr)
+    );
+    
+    if (availableAttributes.length > 0) {
+      setEditingStat({
+        ...editingStat,
+        modifiers: [...editingStat.modifiers, {
+          attribute: availableAttributes[0],
+          multiplier: 1.0,
+          base_bonus: 0.0
+        }]
+      });
+    }
+  };
+
+  const removeModifier = (modifierIndex) => {
+    setEditingStat({
+      ...editingStat,
+      modifiers: editingStat.modifiers.filter((_, index) => index !== modifierIndex)
+    });
+  };
+
   if (!currentProject) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
