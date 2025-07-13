@@ -316,6 +316,50 @@ function App() {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
+          {/* Stat Configuration Panel */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                ⚙️ Stat Configuration
+              </h2>
+              <span className="text-sm text-purple-200">Click to edit modifiers</span>
+            </div>
+
+            <div className="space-y-3">
+              {currentProject.stat_definitions?.map((stat) => (
+                <div
+                  key={stat.name}
+                  onClick={() => editStatModifiers(stat)}
+                  className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 cursor-pointer transition-all duration-200"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-white capitalize">{stat.name}</h3>
+                    <span className="text-sm text-blue-300">Base: {stat.base_value}</span>
+                  </div>
+                  
+                  <div className="text-xs text-white/70 space-y-1">
+                    <div>Per Level: +{stat.per_level_bonus}</div>
+                    {stat.modifiers.map((modifier, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span className="capitalize">{modifier.attribute}:</span>
+                        <span className="text-yellow-300">
+                          ×{modifier.multiplier} {modifier.base_bonus > 0 && `+${modifier.base_bonus}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {(!currentProject.stat_definitions || currentProject.stat_definitions.length === 0) && (
+                <div className="text-center py-8 text-white/60">
+                  <div className="text-4xl mb-2">⚙️</div>
+                  <p>No stat definitions</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Characters Panel */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="flex justify-between items-center mb-4">
