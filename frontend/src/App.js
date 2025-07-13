@@ -23,6 +23,8 @@ function App() {
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [selectedEnemy, setSelectedEnemy] = useState(null);
+  const [showStatEditor, setShowStatEditor] = useState(false);
+  const [editingStat, setEditingStat] = useState(null);
 
   // Load projects on component mount
   useEffect(() => {
