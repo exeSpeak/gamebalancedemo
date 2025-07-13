@@ -279,6 +279,41 @@ async def create_stat_definition(project_id: str, stat_data: StatDefinitionCreat
     await db.projects.replace_one({"id": project_id}, project_obj.dict())
     return stat_def
 
+@api_router.put("/projects/{project_id}/stats/{stat_name}")
+async def update_stat_definition(project_id: str, stat_name: str, stat_data: StatDefinitionCreate):
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    project_obj = Project(**project)
+    
+    # Find and update the stat definition
+    stat_found = False
+    for i, stat_def in enumerate(project_obj.stat_definitions):
+        if stat_def.name == stat_name:
+            project_obj.stat_definitions[i] = StatDefinition(**stat_data.dict())
+            stat_found = True
+            break
+    
+    if not stat_found:
+        raise HTTPException(status_code=404, detail="Stat definition not found")
+    
+    # Recalculate all character stats with new modifiers
+    for character in project_obj.characters:
+        character.calculated_stats = calculate_character_stats(character, project_obj.stat_definitions)
+    
+    await db.projects.replace_one({"id": project_id}, project_obj.dict())
+    return {"message": "Stat definition updated successfully"}
+
+@api_router.get("/projects/{project_id}/stats")
+async def get_stat_definitions(project_id: str):
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    project_obj = Project(**project)
+    return project_obj.stat_definitions
+
 # Balance Comparison Route
 @api_router.get("/projects/{project_id}/balance/{character_id}/{enemy_id}")
 async def get_balance_comparison(project_id: str, character_id: str, enemy_id: str):
