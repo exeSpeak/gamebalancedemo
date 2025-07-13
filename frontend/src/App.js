@@ -593,6 +593,157 @@ function App() {
           </div>
         </div>
 
+        {/* Stat Editor Modal */}
+        {showStatEditor && editingStat && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-white">
+                  Edit {editingStat.name} Modifiers
+                </h2>
+                <button
+                  onClick={() => setShowStatEditor(false)}
+                  className="text-white hover:text-red-300 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Base Values */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-white/80 text-sm mb-2">Base Value</label>
+                    <input
+                      type="number"
+                      value={editingStat.base_value}
+                      onChange={(e) => setEditingStat({
+                        ...editingStat,
+                        base_value: parseFloat(e.target.value) || 0
+                      })}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/80 text-sm mb-2">Per Level Bonus</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={editingStat.per_level_bonus}
+                      onChange={(e) => setEditingStat({
+                        ...editingStat,
+                        per_level_bonus: parseFloat(e.target.value) || 0
+                      })}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Attribute Modifiers */}
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-white">Attribute Modifiers</h3>
+                    <button
+                      onClick={addModifier}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    >
+                      ➕ Add Modifier
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {editingStat.modifiers.map((modifier, index) => (
+                      <div key={index} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="grid grid-cols-4 gap-3 items-center">
+                          <div>
+                            <label className="block text-white/80 text-xs mb-1">Attribute</label>
+                            <select
+                              value={modifier.attribute}
+                              onChange={(e) => updateModifier(index, 'attribute', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            >
+                              {currentProject.attributes.map(attr => (
+                                <option key={attr} value={attr} className="bg-gray-800">
+                                  {attr}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-white/80 text-xs mb-1">Multiplier</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={modifier.multiplier}
+                              onChange={(e) => updateModifier(index, 'multiplier', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white/80 text-xs mb-1">Base Bonus</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={modifier.base_bonus}
+                              onChange={(e) => updateModifier(index, 'base_bonus', e.target.value)}
+                              className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            />
+                          </div>
+                          <button
+                            onClick={() => removeModifier(index)}
+                            className="px-2 py-1 bg-red-600/50 text-white rounded hover:bg-red-600/70 transition-colors text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="mt-2 text-xs text-purple-200">
+                          Formula: {modifier.attribute} × {modifier.multiplier} + {modifier.base_bonus}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {editingStat.modifiers.length === 0 && (
+                      <div className="text-center py-6 text-white/60">
+                        No modifiers. Click "Add Modifier" to create attribute relationships.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="p-4 bg-blue-600/20 rounded-lg border border-blue-400/30">
+                  <h4 className="text-white font-medium mb-2">📊 Formula Preview</h4>
+                  <div className="text-blue-200 text-sm">
+                    <div className="font-mono">
+                      {editingStat.name} = {editingStat.base_value}
+                      {editingStat.modifiers.map((mod, idx) => (
+                        <span key={idx}> + ({mod.attribute} × {mod.multiplier}{mod.base_bonus !== 0 && ` + ${mod.base_bonus}`})</span>
+                      ))}
+                      {editingStat.per_level_bonus !== 0 && ` + ((level - 1) × ${editingStat.per_level_bonus})`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={updateStatDefinition}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium"
+                  >
+                    💾 Save Changes
+                  </button>
+                  <button
+                    onClick={() => setShowStatEditor(false)}
+                    className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Balance Comparison */}
         {selectedCharacter && selectedEnemy && (
           <div className="mt-6 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
